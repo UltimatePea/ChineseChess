@@ -1,6 +1,7 @@
 module Printing where
 import AppState
 import CoreLib
+import CursorInputControl
 import Data.List (intersperse)
 import qualified System.Console.ANSI as C
 import Control.Monad.IO.Class
@@ -52,6 +53,7 @@ colorPrint x = do
     let color = toColor x
     C.setSGR [C.SetColor C.Foreground (fst color) (snd color)]
     putStr $ (toPrintable x) : []
+    C.setSGR [C.Reset]
 
 colorPrintStr :: (Colorable a, Printable a) => [a] -> IO ()
 colorPrintStr = mapM_ colorPrint
@@ -62,7 +64,7 @@ colorPrintStrLn xs = do
     putStrLn ""
 
     -- assumes non empty board, assume one division at y = 5
-colorPrintBoard :: (MonadBoard m, MonadIO m) => m ()
+colorPrintBoard :: (MonadBoard m, MonadIO m, MonadPosition m) => m ()
 colorPrintBoard  = getBoard >>= \(RawBoard xxs) -> 
     let width = length xxs
         height = length (head xxs) 
@@ -79,11 +81,16 @@ colorPrintBoard  = getBoard >>= \(RawBoard xxs) ->
                 printMiddleDivider :: Int -> IO ()
                 printMiddleDivider width = colorPrintStrLn ( 
                     [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
-                printRow :: (Colorable a, Printable a,  MonadIO m) => Int ->  [a] -> m ()
+                printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition m) => Int ->  [a] -> m ()
                 printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [1..] row) )
                                 >> (liftIO $ putStrLn "")
-                printCell :: (Colorable a, Printable a, MonadIO m) => Int -> Int ->  a -> m ()
-                printCell rowNum colNum c = liftIO $ colorPrint c
+                printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition m) => Int -> Int ->  a -> m ()
+                printCell rowNum colNum c = do
+                    (i,j) <- getPosition
+                    if rowNum == i && colNum == j
+                        then liftIO $ C.setSGR [C.SetColor C.Background C.Vivid C.Black]
+                        else return ()
+                    liftIO $ colorPrint c
 
 
 

@@ -1,24 +1,25 @@
+{-# LANGUAGE FlexibleInstances #-}
 module CursorInputControl where
 
 
 import Control.Monad.State.Lazy
 import System.IO
-import Application
+import ApplicationDeclaration
 import System.Console.ANSI
 
 controlMainLoop :: Application
 controlMainLoop = do
-    hSetBuffering stdin NoBuffering
-    isEof <- hIsEOF stdin
+    liftIO $ hSetBuffering stdin NoBuffering
+    isEof <- liftIO $ hIsEOF stdin
     if isEof -- also check hReady, e.g. up arrow is esc[a
     then return ()
     else do
-        c <- hGetChar stdin
+        c <- liftIO $ hGetChar stdin
         handle c
         controlMainLoop
 
 handle :: Char -> Application
-handle 'h'
+handle 'h' = undefined
 
 
 type CurorPosition = (Int, Int)
@@ -31,8 +32,13 @@ class MoveAction a where
     move :: a -> (Int, Int) -> (Int, Int)
 
 
-class MonadPosition m where
-    getPosition :: m a -> (Int, Int)
+class Monad m => MonadPosition m where
+    getPosition :: m (Int, Int)
+    putPosition :: (Int, Int) -> m ()
+
+instance (Monad m) => MonadPosition (StateT (Int, Int) m) where
+    getPosition = get
+    putPosition = put
 
 
 moveCursorRaw :: (Monad m, MoveAction t) => t -> StateT (Int, Int) m ()

@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 module CoreLib  where
 
 import Control.Monad.State.Lazy
@@ -18,15 +19,23 @@ setN n x xs = take n xs ++ [x] ++ drop (n+1) xs
 setN2 :: Int -> Int -> a -> [[a]] -> [[a]]
 setN2 y x t xss = setN y (setN x t (xss !! y)) xss
 
-putEmptyBoard :: State Board ()
-putEmptyBoard = put $ RawBoard (replicate 10 (replicate 9 (Piece Red Empty)))
+class Monad m => MonadBoard m where
+    getBoard :: m Board
+    putBoard :: Board -> m ()
 
-updatePiece :: Int -> Int -> Piece -> State Board ()
+instance Monad m => MonadBoard (StateT Board m) where
+    getBoard = get
+    putBoard = put
+
+putEmptyBoard :: (MonadBoard m) => m ()
+putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece Red Empty)))
+
+updatePiece :: MonadBoard m => Int -> Int -> Piece -> m ()
 updatePiece y x p =  do
-    (RawBoard xs) <- get
-    put (RawBoard (setN2 y x p xs))
+    (RawBoard xs) <- getBoard
+    putBoard (RawBoard (setN2 y x p xs))
 
-putInitialGameBoard :: State Board ()
+putInitialGameBoard :: MonadBoard m => m ()
 putInitialGameBoard = do
     putEmptyBoard
     updatePiece 0 0 (Piece Black Chariot)

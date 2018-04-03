@@ -2,6 +2,7 @@ module Printing where
 import CoreLib
 import Data.List (intersperse)
 import qualified System.Console.ANSI as C
+import Control.Monad.IO.Class
 
 class Printable p where
     toPrintable :: p -> Char
@@ -60,8 +61,8 @@ colorPrintStrLn xs = do
     putStrLn ""
 
     -- assumes non empty board, assume one division at y = 5
-colorPrintBoard :: (Colorable a, Printable a) => RawBoard a -> IO ()
-colorPrintBoard (RawBoard xxs) = 
+colorPrintBoard :: (MonadBoard m, MonadIO m) => m ()
+colorPrintBoard  = getBoard >>= \(RawBoard xxs) -> 
     let width = length xxs
         height = length (head xxs) 
         xs = take 5 xxs -- first five rows
@@ -69,18 +70,19 @@ colorPrintBoard (RawBoard xxs) =
     in  if width == 0 -- this should shortcut the evaluation of height above
         then error "Cannot print empty board"
         else do
-            sequence_ $ intersperse (printDivider width) (map printRow xs) 
-            printMiddleDivider width
-            sequence_ $ intersperse (printDivider width) (map printRow ys) 
+            sequence_ $ intersperse (liftIO $ printDivider width) (zipWith printRow [0..] xs) 
+            liftIO $ printMiddleDivider width
+            sequence_ $ intersperse (liftIO $ printDivider width) (zipWith printRow [5..] ys) 
         where   printDivider :: Int -> IO ()
                 printDivider width = colorPrintStrLn (intersperse Space (replicate (width-1) VerticleBar) )
                 printMiddleDivider :: Int -> IO ()
                 printMiddleDivider width = colorPrintStrLn ( 
                     [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
-                printRow :: (Colorable a, Printable a) => [a] -> IO ()
-                printRow row = sequence_ (intersperse (colorPrint HorizontalBar) (map colorPrint row) )
-                                >> putStrLn ""
-
+                printRow :: (Colorable a, Printable a,  MonadIO m) => Int ->  [a] -> m ()
+                printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [1..] row) )
+                                >> (liftIO $ putStrLn "")
+                printCell :: (Colorable a, Printable a, MonadIO m) => Int -> Int ->  a -> m ()
+                printCell rowNum colNum c = liftIO $ colorPrint c
 
 
 

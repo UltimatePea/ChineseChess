@@ -32,11 +32,6 @@ moveCursor action = do
     (x, y) <- getPosition
     putPosition (move action (x,y))
 
-updateScreenCursorLocation :: (MonadIO m, MonadPosition m) => m ()
-updateScreenCursorLocation = do
-    (x, y) <- getPosition
-    liftIO $ setCursorPosition ((x+1) * 2 - 1) ((y+1) * 2 - 1)
-
 printPositionInfo :: (MonadIO m, MonadPosition m) => m ()
 printPositionInfo = do
     (x, y) <- getPosition

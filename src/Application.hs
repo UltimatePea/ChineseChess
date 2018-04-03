@@ -26,6 +26,9 @@ mainApp = do
 controlMainLoop :: Application
 controlMainLoop = do
 
+    -- 2. Set Correct Cursor Position -- We Use Virtual Cursors
+
+
     -- 1. Print Current Board
     -- clear board first
     liftIO clearScreen
@@ -35,16 +38,11 @@ controlMainLoop = do
     -- first move the cursor to upper left corner
     liftIO $ setCursorPosition 0 0
     -- then print the board
-    board <- getBoard 
-    liftIO $ colorPrintBoard board
+    colorPrintBoard 
     -- then print other info
     printPositionInfo
 
 
-    -- 2. Set Correct Cursor Position
-    updateScreenCursorLocation
-    -- show previous hidden cursor
-    liftIO showCursor
 
 
 
@@ -56,7 +54,9 @@ controlMainLoop = do
     -- listen for input
     isEof <- liftIO $ hIsEOF stdin
     if isEof -- also check hReady, e.g. up arrow is esc[a
-    then return ()
+    then do
+        liftIO showCursor
+        return ()
     else do
         c <- liftIO $ hGetChar stdin
         handle c
@@ -67,3 +67,5 @@ handle 'h' = moveCursor MoveLeft
 handle 'j' = moveCursor MoveDown
 handle 'k' = moveCursor MoveUp
 handle 'l' = moveCursor MoveRight
+handle '\EOT' = moveCursor MoveRight
+handle x = error $ "Unrecognized Character " ++ show x

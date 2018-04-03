@@ -67,5 +67,5 @@ handle 'h' = moveCursor MoveLeft
 handle 'j' = moveCursor MoveDown
 handle 'k' = moveCursor MoveUp
 handle 'l' = moveCursor MoveRight
-handle '\EOT' = moveCursor MoveRight
+handle '\EOT' = return ()
 handle x = error $ "Unrecognized Character " ++ show x

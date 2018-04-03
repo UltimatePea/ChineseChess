@@ -1,18 +1,15 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 
 module CoreLib  where
 
 import Control.Monad.State.Lazy
 import Control.Monad.Trans.Class
 
+import AppState
 
-data PieceType = General | Advisor | Elephant | Horse | Chariot | Cannon | Soldier | Empty 
-data PieceSide = Red | Black 
-data Piece = Piece PieceSide PieceType
-
-data RawBoard a = RawBoard [[a]]
-type Board = RawBoard Piece
 
 -- lens helper functions
 
@@ -26,13 +23,13 @@ class Monad m => MonadBoard m where
     getBoard :: m Board
     putBoard :: Board -> m ()
 
-instance Monad m => MonadBoard (StateT Board m) where
-    getBoard = get
-    putBoard = put
-
-instance {-# OVERLAPPABLE #-} (MonadBoard m, MonadTrans t, Monad (t m)) => MonadBoard (t m) where
-    getBoard = lift getBoard
-    putBoard = lift . putBoard
+instance (Monad m, MonadState RootStore m) => MonadBoard m where
+    getBoard = do
+        store <- get
+        return (board store)
+    putBoard b = do
+        store <- get
+        put (store { board = b})
 
 putEmptyBoard :: (MonadBoard m) => m ()
 putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece Red Empty)))
@@ -83,5 +80,3 @@ putInitialGameBoard = do
     updatePiece 9 7 (Piece Red Horse)
     updatePiece 9 8 (Piece Red Chariot)
 
-newGameBoard :: Board
-newGameBoard = execState putInitialGameBoard (RawBoard [])

@@ -1,6 +1,7 @@
 module Application where
 
 import CoreLib
+import AppState
 import Control.Monad.State.Lazy
 import ApplicationDeclaration
 import Printing
@@ -13,12 +14,12 @@ import System.IO
 
 entry :: IO ()
 entry = 
-    let st1 = evalStateT mainApp (0, 0)
-        st2 = evalStateT st1 newGameBoard
-    in st2
+    let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []))
+    in st1
 
 mainApp :: Application
 mainApp = do 
+    putInitialGameBoard
     controlMainLoop
 
 

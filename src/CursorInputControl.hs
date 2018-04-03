@@ -1,10 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 module CursorInputControl where
 
 
+import AppState
 import Control.Monad.State.Lazy
 import ApplicationDeclaration
-import System.Console.ANSI
+import System.Console.ANSI hiding (cursorPosition)
 
 
 
@@ -22,9 +25,13 @@ class Monad m => MonadPosition m where
     getPosition :: m (Int, Int)
     putPosition :: (Int, Int) -> m ()
 
-instance (Monad m) => MonadPosition (StateT (Int, Int) m) where
-    getPosition = get
-    putPosition = put
+instance (Monad m, MonadState RootStore m) => MonadPosition  m where
+    getPosition = do
+        store <- get
+        return (cursorPosition store)
+    putPosition p = do
+        store <- get
+        put (store  { cursorPosition = p })
 
 
 moveCursor :: (MonadPosition m, MoveAction t) => t ->  m ()

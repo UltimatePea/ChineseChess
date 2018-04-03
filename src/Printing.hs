@@ -1,4 +1,5 @@
 module Printing where
+import AppState
 import CoreLib
 import Data.List (intersperse)
 import qualified System.Console.ANSI as C

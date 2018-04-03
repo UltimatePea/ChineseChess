@@ -3,30 +3,16 @@ module CursorInputControl where
 
 
 import Control.Monad.State.Lazy
-import System.IO
 import ApplicationDeclaration
 import System.Console.ANSI
 
-controlMainLoop :: Application
-controlMainLoop = do
-    liftIO $ hSetBuffering stdin NoBuffering
-    isEof <- liftIO $ hIsEOF stdin
-    if isEof -- also check hReady, e.g. up arrow is esc[a
-    then return ()
-    else do
-        c <- liftIO $ hGetChar stdin
-        handle c
-        controlMainLoop
-
-handle :: Char -> Application
-handle 'h' = undefined
 
 
 type CurorPosition = (Int, Int)
 
 
-maxX = 8 -- fixed width for now
-maxY = 9 -- fixed height for now
+maxX = 9 -- x is down
+maxY = 8 -- y is across
 
 class MoveAction a where
     move :: a -> (Int, Int) -> (Int, Int)
@@ -41,28 +27,34 @@ instance (Monad m) => MonadPosition (StateT (Int, Int) m) where
     putPosition = put
 
 
-moveCursorRaw :: (Monad m, MoveAction t) => t -> StateT (Int, Int) m ()
-moveCursorRaw action = do
-    (x, y) <- get
-    put (move action (x,y))
+moveCursor :: (MonadPosition m, MoveAction t) => t ->  m ()
+moveCursor action = do
+    (x, y) <- getPosition
+    putPosition (move action (x,y))
 
-updateScreenCursorLocationRaw :: (MonadIO m) => StateT (Int, Int) m ()
-updateScreenCursorLocationRaw = do
-    (x, y) <- get
-    liftIO $ setCursorPosition (x * 2 - 1) (y * 2 - 1)
+updateScreenCursorLocation :: (MonadIO m, MonadPosition m) => m ()
+updateScreenCursorLocation = do
+    (x, y) <- getPosition
+    liftIO $ setCursorPosition ((x+1) * 2 - 1) ((y+1) * 2 - 1)
+
+printPositionInfo :: (MonadIO m, MonadPosition m) => m ()
+printPositionInfo = do
+    (x, y) <- getPosition
+    liftIO $ putStrLn $ "Cursor At: (" ++ show x ++ ", " ++ show y ++ ")"
+
 
 data MoveActions = MoveLeft | MoveRight | MoveUp | MoveDown
 
 instance MoveAction MoveActions where
-    move MoveLeft (x, y) 
+    move MoveUp (x, y) 
                 | x > 0 = (x-1, y)
                 | x == 0 = (x, y)
-    move MoveRight (x, y) 
+    move MoveDown (x, y) 
                 | x < maxX = (x+1, y)
                 | x == maxX = (x, y)
-    move MoveUp (x, y) 
+    move MoveLeft (x, y) 
                 | y > 0 = (x, y-1)
                 | y == 0 = (x, y)
-    move MoveDown (x, y) 
+    move MoveRight (x, y) 
                 | y < maxY = (x, y+1)
                 | y == maxY = (x, y)

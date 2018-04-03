@@ -1,7 +1,10 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module CoreLib  where
 
 import Control.Monad.State.Lazy
+import Control.Monad.Trans.Class
 
 
 data PieceType = General | Advisor | Elephant | Horse | Chariot | Cannon | Soldier | Empty 
@@ -26,6 +29,10 @@ class Monad m => MonadBoard m where
 instance Monad m => MonadBoard (StateT Board m) where
     getBoard = get
     putBoard = put
+
+instance {-# OVERLAPPABLE #-} (MonadBoard m, MonadTrans t, Monad (t m)) => MonadBoard (t m) where
+    getBoard = lift getBoard
+    putBoard = lift . putBoard
 
 putEmptyBoard :: (MonadBoard m) => m ()
 putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece Red Empty)))

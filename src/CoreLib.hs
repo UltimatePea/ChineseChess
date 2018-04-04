@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 
 module CoreLib  where
@@ -23,13 +22,13 @@ class Monad m => MonadBoard m where
     getBoard :: m Board
     putBoard :: Board -> m ()
 
-instance (Monad m, MonadState RootStore m) => MonadBoard m where
+instance (Monad m, MonadRootStore m) => MonadBoard m where
     getBoard = do
-        store <- get
+        store <- getRootStore
         return (board store)
     putBoard b = do
-        store <- get
-        put (store { board = b})
+        store <- getRootStore
+        putRootStore (store { board = b})
 
 putEmptyBoard :: (MonadBoard m) => m ()
 putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece Red Empty)))

@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 module CursorInputControl where
 
 
@@ -25,13 +24,13 @@ class Monad m => MonadPosition m where
     getPosition :: m (Int, Int)
     putPosition :: (Int, Int) -> m ()
 
-instance (Monad m, MonadState RootStore m) => MonadPosition  m where
+instance (Monad m, MonadRootStore m) => MonadPosition  m where
     getPosition = do
-        store <- get
+        store <- getRootStore
         return (cursorPosition store)
     putPosition p = do
-        store <- get
-        put (store  { cursorPosition = p })
+        store <- getRootStore
+        putRootStore (store  { cursorPosition = p })
 
 
 moveCursor :: (MonadPosition m, MoveAction t) => t ->  m ()

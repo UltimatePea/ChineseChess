@@ -31,7 +31,7 @@ instance (Monad m, MonadRootStore m) => MonadBoard m where
         putRootStore (store { board = b})
 
 putEmptyBoard :: (MonadBoard m) => m ()
-putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece Red Empty)))
+putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece None Empty)))
 
 getPiece :: MonadBoard m => Int -> Int -> m Piece
 getPiece r c = do

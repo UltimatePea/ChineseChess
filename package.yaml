@@ -21,9 +21,10 @@ description:         Please see the README on Github at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- ansi-terminal >= 0.8.0.2 && < 9
-- mtl >= 2.2.2 && < 3
-- transformers >= 0.5.2.0 && < 1
+- ansi-terminal >= 0.8.0.2 && < 0.9
+- mtl >= 2.2.2 && < 2.3
+- transformers >= 0.5.2.0 && < 0.6
+- transformers-either >= 0.0.2 && < 0.1
 
 library:
   source-dirs: src

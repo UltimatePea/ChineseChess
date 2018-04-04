@@ -82,7 +82,7 @@ printMiddleDivider :: Int -> IO ()
 printMiddleDivider width = colorPrintStrLn ( 
         [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
 printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition m) => Int ->  [a] -> m ()
-printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [1..] row) )
+printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [0..] row) )
                                         >> (liftIO $ putStrLn "")
 printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition m) => Int -> Int ->  a -> m ()
 printCell rowNum colNum c = do

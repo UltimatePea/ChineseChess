@@ -14,7 +14,7 @@ import System.IO
 
 entry :: IO ()
 entry = 
-    let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []))
+    let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []) Normal)
     in st1
 
 mainApp :: Application

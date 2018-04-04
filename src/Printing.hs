@@ -76,21 +76,21 @@ colorPrintBoard  = getBoard >>= \(RawBoard xxs) ->
             sequence_ $ intersperse (liftIO $ printDivider width) (zipWith printRow [0..] xs) 
             liftIO $ printMiddleDivider width
             sequence_ $ intersperse (liftIO $ printDivider width) (zipWith printRow [5..] ys) 
-        where   printDivider :: Int -> IO ()
-                printDivider width = colorPrintStrLn (intersperse Space (replicate (width-1) VerticleBar) )
-                printMiddleDivider :: Int -> IO ()
-                printMiddleDivider width = colorPrintStrLn ( 
-                    [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
-                printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition m) => Int ->  [a] -> m ()
-                printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [1..] row) )
-                                >> (liftIO $ putStrLn "")
-                printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition m) => Int -> Int ->  a -> m ()
-                printCell rowNum colNum c = do
-                    (i,j) <- getPosition
-                    if rowNum == i && colNum == j
-                        then liftIO $ C.setSGR [C.SetColor C.Background C.Vivid C.Black]
-                        else return ()
-                    liftIO $ colorPrint c
+printDivider :: Int -> IO ()
+printDivider width = colorPrintStrLn (intersperse Space (replicate (width-1) VerticleBar) )
+printMiddleDivider :: Int -> IO ()
+printMiddleDivider width = colorPrintStrLn ( 
+        [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
+printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition m) => Int ->  [a] -> m ()
+printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [1..] row) )
+                                        >> (liftIO $ putStrLn "")
+printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition m) => Int -> Int ->  a -> m ()
+printCell rowNum colNum c = do
+    (i,j) <- getPosition
+    if rowNum == i && colNum == j
+        then liftIO $ C.setSGR [C.SetColor C.Background C.Vivid C.Black]
+        else return ()
+    liftIO $ colorPrint c
 
 
 

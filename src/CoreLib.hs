@@ -34,6 +34,11 @@ instance (Monad m, MonadState RootStore m) => MonadBoard m where
 putEmptyBoard :: (MonadBoard m) => m ()
 putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece Red Empty)))
 
+getPiece :: MonadBoard m => Int -> Int -> m Piece
+getPiece r c = do
+    (RawBoard xxs) <- getBoard
+    return $ (xss ! r) ! c
+
 updatePiece :: MonadBoard m => Int -> Int -> Piece -> m ()
 updatePiece y x p =  do
     (RawBoard xs) <- getBoard

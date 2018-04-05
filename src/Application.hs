@@ -21,7 +21,6 @@ entry :: IO ()
 entry = 
     let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []) 
             Normal ((0, 0), (0,0)) NotInGame 
-            -- DirectInput
             )
     in st1
 
@@ -74,10 +73,6 @@ controlMainLoop = do
         return ()
     else do
         c <- liftIO $ hGetChar stdin
-        --inputMode <- getInputMode
-        --case inputMode of
-        --    DirectInput -> handleDirect c
-        --    TextInput _ -> handleTextInput c
         handleDirect c
 
         -- do app state check here
@@ -85,16 +80,6 @@ controlMainLoop = do
         case state of 
             End -> liftIO showCursor >> return ()
             _ -> controlMainLoop
-
---handleTextInput :: Char -> Application
---handleTextInput '\n' = do
---    (TextInput str) <- getInputMode
---    handleCommand str
---    putInputMode (DirectInput)
---handleTextInput c = do
---    (TextInput str) <- getInputMode
---    handleCommand str
---    putInputMode (TextInput (str++[c]))
 
 
 handleDirect :: Char -> Application
@@ -105,17 +90,6 @@ handleDirect ':' = do
     liftIO hideCursor
     liftIO $ hSetBuffering stdin NoBuffering
     handleCommand str
-
-
-
-    --state <- getAppState
-    --case state of 
-    --    Normal -> f
-    --    OperationSuccessful _ -> f
-    --    AppError _ -> f
-    --    PieceSelected _ _ -> putAppState (AppError "You must begin command when in normal mode")
-
-    --where f = putAppState (Normal) >> putInputMode (TextInput "")
 
 
 handleDirect 'h' = moveCursor MoveLeft >> postMoveStateChange
@@ -183,10 +157,7 @@ printAppState = do
     state <- getAppState
     case state of
         Normal -> 
-            --getInputMode >>= \case 
-            --DirectInput -> 
               liftIO $ putStrLn "Press hjkl to move cursor, m to move a piece"
-            --TextInput str -> liftIO $ putStrLn $ ":" ++ str
         PieceSelected _ _ -> liftIO $ putStrLn "Press hjkl to move cursor, y to confirm, n to cancel"
         AppError reason -> liftIO $ putStrLn $ "Error: " ++ reason
         OperationSuccessful status -> liftIO $ putStrLn $ "OK: " ++ status

@@ -19,7 +19,6 @@ data AppState = Normal | PieceSelected {
     } | End | AppError String | OperationSuccessful String
 
 data GameState = NotInGame | InGame { currentSide :: PieceSide} | GameFinished {winningSide :: PieceSide}
---data InputMode = DirectInput | TextInput { commandText :: String }
 
 data RootStore = RootStore
     {
@@ -28,7 +27,6 @@ data RootStore = RootStore
         , appState :: AppState
         , movementAction :: ((Int, Int), (Int, Int))
         , gameState :: GameState
-        --, inputMode :: InputMode
     }
 
 class Monad m => MonadRootStore m where
@@ -62,15 +60,3 @@ instance (Monad m, MonadRootStore m) => MonadGameState  m where
     putGameState s = do
         store <- getRootStore
         putRootStore (store  { gameState = s }) 
-
---class Monad m => MonadInputMode m where
---    getInputMode :: m InputMode
---    putInputMode :: InputMode -> m ()
---
---instance (Monad m, MonadRootStore m) => MonadInputMode  m where
---    getInputMode = do
---        store <- getRootStore
---        return (inputMode store)
---    putInputMode s = do
---        store <- getRootStore
---        putRootStore (store  { inputMode = s }) 

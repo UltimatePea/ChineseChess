@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module Application where
 
 import CoreLib
@@ -7,6 +8,7 @@ import Control.Monad.Trans.Either
 import ApplicationDeclaration
 import Printing
 import GameLogic
+import CommandSystem
 import ApplicationMonads
 import CursorInputControl
 import System.Console.ANSI
@@ -17,7 +19,10 @@ import System.IO
 
 entry :: IO ()
 entry = 
-    let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []) Normal ((0, 0), (0,0)))
+    let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []) 
+            Normal ((0, 0), (0,0)) NotInGame 
+            -- DirectInput
+            )
     in st1
 
 mainApp :: Application
@@ -69,7 +74,11 @@ controlMainLoop = do
         return ()
     else do
         c <- liftIO $ hGetChar stdin
-        handle c
+        --inputMode <- getInputMode
+        --case inputMode of
+        --    DirectInput -> handleDirect c
+        --    TextInput _ -> handleTextInput c
+        handleDirect c
 
         -- do app state check here
         state <- getAppState
@@ -77,13 +86,44 @@ controlMainLoop = do
             End -> liftIO showCursor >> return ()
             _ -> controlMainLoop
 
-handle :: Char -> Application
-handle 'h' = moveCursor MoveLeft >> postMoveStateChange
-handle 'j' = moveCursor MoveDown >> postMoveStateChange
-handle 'k' = moveCursor MoveUp >> postMoveStateChange
-handle 'l' = moveCursor MoveRight >> postMoveStateChange
-handle '\EOT' = putAppState End
-handle 'm' = do
+--handleTextInput :: Char -> Application
+--handleTextInput '\n' = do
+--    (TextInput str) <- getInputMode
+--    handleCommand str
+--    putInputMode (DirectInput)
+--handleTextInput c = do
+--    (TextInput str) <- getInputMode
+--    handleCommand str
+--    putInputMode (TextInput (str++[c]))
+
+
+handleDirect :: Char -> Application
+handleDirect ':' = do
+    liftIO $ hSetBuffering stdin LineBuffering
+    liftIO showCursor
+    str <- liftIO getLine
+    liftIO hideCursor
+    liftIO $ hSetBuffering stdin NoBuffering
+    handleCommand str
+
+
+
+    --state <- getAppState
+    --case state of 
+    --    Normal -> f
+    --    OperationSuccessful _ -> f
+    --    AppError _ -> f
+    --    PieceSelected _ _ -> putAppState (AppError "You must begin command when in normal mode")
+
+    --where f = putAppState (Normal) >> putInputMode (TextInput "")
+
+
+handleDirect 'h' = moveCursor MoveLeft >> postMoveStateChange
+handleDirect 'j' = moveCursor MoveDown >> postMoveStateChange
+handleDirect 'k' = moveCursor MoveUp >> postMoveStateChange
+handleDirect 'l' = moveCursor MoveRight >> postMoveStateChange
+handleDirect '\EOT' = putAppState End
+handleDirect 'm' = do
     state <- getAppState
     case state of
         _ -> do
@@ -93,7 +133,7 @@ handle 'm' = do
             if availablePos /= []
             then putAppState (PieceSelected (r,c) availablePos)
             else putAppState (AppError "You cannot move this piece")
-handle 'y' = do
+handleDirect 'y' = do
     state <- getAppState
     case state of 
         PieceSelected (r,c) _ -> do
@@ -105,14 +145,14 @@ handle 'y' = do
                 Left reason -> putAppState (AppError reason)
         _ -> putAppState (AppError "y not available, use m to select a piece first")
 
-handle '\ESC' = putAppState Normal
-handle 'n' = do
+handleDirect '\ESC' = putAppState Normal
+handleDirect 'n' = do
     state <- getAppState
     case state of 
         PieceSelected _ _ -> do
                 putAppState (OperationSuccessful "Move Cancelled")
         _ -> putAppState (AppError "n not available, use m to select a piece first")
-handle x = putAppState (AppError $ "Unrecognized operation " ++ show x)
+handleDirect x = putAppState (AppError $ "Unrecognized operation " ++ show x)
 
 -- This method must be called upon the initiation of a piece selected, the movable piece must be the piece that's under the cursor
 getAvailablePositions :: (MonadBoard m, MonadMovePieceAction m, MonadAppState m, MonadPosition m) => m [(Int, Int)]
@@ -142,7 +182,11 @@ printAppState :: (MonadAppState m, MonadIO m) => m ()
 printAppState = do
     state <- getAppState
     case state of
-        Normal -> liftIO $ putStrLn "Press hjkl to move cursor, m to move a piece"
+        Normal -> 
+            --getInputMode >>= \case 
+            --DirectInput -> 
+              liftIO $ putStrLn "Press hjkl to move cursor, m to move a piece"
+            --TextInput str -> liftIO $ putStrLn $ ":" ++ str
         PieceSelected _ _ -> liftIO $ putStrLn "Press hjkl to move cursor, y to confirm, n to cancel"
         AppError reason -> liftIO $ putStrLn $ "Error: " ++ reason
         OperationSuccessful status -> liftIO $ putStrLn $ "OK: " ++ status

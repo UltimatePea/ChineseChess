@@ -18,12 +18,17 @@ data AppState = Normal | PieceSelected {
     reachablePositions :: [(Int, Int)]
     } | End | AppError String | OperationSuccessful String
 
+data GameState = NotInGame | InGame { currentSide :: PieceSide} | GameFinished {winningSide :: PieceSide}
+--data InputMode = DirectInput | TextInput { commandText :: String }
+
 data RootStore = RootStore
     {
           cursorPosition :: (Int, Int)
         , board :: Board
         , appState :: AppState
         , movementAction :: ((Int, Int), (Int, Int))
+        , gameState :: GameState
+        --, inputMode :: InputMode
     }
 
 class Monad m => MonadRootStore m where
@@ -45,3 +50,27 @@ instance (Monad m, MonadRootStore m) => MonadAppState  m where
     putAppState s = do
         store <- getRootStore
         putRootStore (store  { appState = s }) 
+
+class Monad m => MonadGameState m where
+    getGameState :: m GameState
+    putGameState :: GameState -> m ()
+
+instance (Monad m, MonadRootStore m) => MonadGameState  m where
+    getGameState = do
+        store <- getRootStore
+        return (gameState store)
+    putGameState s = do
+        store <- getRootStore
+        putRootStore (store  { gameState = s }) 
+
+--class Monad m => MonadInputMode m where
+--    getInputMode :: m InputMode
+--    putInputMode :: InputMode -> m ()
+--
+--instance (Monad m, MonadRootStore m) => MonadInputMode  m where
+--    getInputMode = do
+--        store <- getRootStore
+--        return (inputMode store)
+--    putInputMode s = do
+--        store <- getRootStore
+--        putRootStore (store  { inputMode = s }) 

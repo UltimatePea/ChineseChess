@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 
 module GameLogic where
 
@@ -17,7 +18,7 @@ assertThat b str
 assertThat' :: (Monad m) => String -> Bool -> EitherT String m ()
 assertThat' = flip assertThat
 
-movePiece :: (MonadBoard m, MonadMovePieceAction m) =>  EitherT String m ()
+movePiece :: (MonadBoard m, MonadMovePieceAction m, MonadGameState m) =>  EitherT String m ()
 movePiece = do
     from@(fromRow, fromCol) <- lift getMoveFrom
     to@(toRow, toCol) <- lift getMoveTo
@@ -27,13 +28,32 @@ movePiece = do
     checkMoveViability
     lift $ updatePiece fromRow fromCol (Piece None Empty)
     lift $ updatePiece toRow toCol (Piece fromredblack fromtype)
+    -- update game state accordingly
 
-checkMoveViability :: (MonadBoard m, MonadMovePieceAction m ) =>  EitherT String m ()
+    currentGameState <- lift getGameState 
+    lift $ putGameState $ case currentGameState of
+        NotInGame -> NotInGame
+        GameFinished x -> GameFinished x
+        InGame x -> 
+            -- game finished if general is taken
+            if totype == General 
+            then GameFinished x
+            else InGame $ if x == Red then Black else Red
+
+checkMoveViability :: (MonadBoard m, MonadMovePieceAction m, MonadGameState m ) =>  EitherT String m ()
 checkMoveViability  = do
     from@(fromRow, fromCol) <- lift getMoveFrom
     to@(toRow, toCol) <- lift getMoveTo
     p@(Piece fromredblack fromtype) <- lift $ getPiece fromRow fromCol
     (Piece toredblack totype) <- lift $ getPiece toRow toCol
+
+    -- check when in game
+    lift getGameState >>= \case
+        NotInGame -> return ()
+        GameFinished _ -> return ()
+        InGame side -> assertThat (fromredblack == side) ("Move only " ++ show side ++ "'s pieces")
+
+
     assertThat (fromtype /= Empty ) 
         $ "There is no movable piece at (" ++ show fromRow ++ ", " ++ show fromCol ++ ")"
     assertThat (fromredblack /= toredblack) 

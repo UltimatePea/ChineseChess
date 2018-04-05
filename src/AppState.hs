@@ -7,7 +7,7 @@ import Control.Monad.State.Lazy
 
 
 data PieceType = General | Advisor | Elephant | Horse | Chariot | Cannon | Soldier | Empty deriving Eq
-data PieceSide = Red | Black | None deriving Eq
+data PieceSide = Red | Black | None deriving (Eq, Show)
 data Piece = Piece PieceSide PieceType
 
 data RawBoard a = RawBoard [[a]]

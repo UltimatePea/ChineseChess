@@ -50,6 +50,7 @@ controlMainLoop = do
     -- then print other info after clearing info
     liftIO $ clearFromCursorToScreenEnd
     printPositionInfo
+    printGameState
     printAppState
 
     -- we can always leave the cursor at tend of our print
@@ -87,9 +88,9 @@ handleDirect ':' = do
     liftIO $ hSetBuffering stdin LineBuffering
     liftIO showCursor
     str <- liftIO getLine
+    handleCommand str
     liftIO hideCursor
     liftIO $ hSetBuffering stdin NoBuffering
-    handleCommand str
 
 
 handleDirect 'h' = moveCursor MoveLeft >> postMoveStateChange
@@ -129,7 +130,7 @@ handleDirect 'n' = do
 handleDirect x = putAppState (AppError $ "Unrecognized operation " ++ show x)
 
 -- This method must be called upon the initiation of a piece selected, the movable piece must be the piece that's under the cursor
-getAvailablePositions :: (MonadBoard m, MonadMovePieceAction m, MonadAppState m, MonadPosition m) => m [(Int, Int)]
+getAvailablePositions :: (MonadBoard m, MonadMovePieceAction m, MonadAppState m, MonadPosition m, MonadGameState m) => m [(Int, Int)]
 getAvailablePositions = do
     (r,c) <- getPosition 
     res <- flip filterM allBoardPositions $ \(r2, c2) -> do
@@ -162,3 +163,13 @@ printAppState = do
         AppError reason -> liftIO $ putStrLn $ "Error: " ++ reason
         OperationSuccessful status -> liftIO $ putStrLn $ "OK: " ++ status
         -- End not happending here
+
+
+printGameState :: (MonadGameState m, MonadIO m) => m ()
+printGameState = do
+    state <- getGameState
+    case state of
+        NotInGame -> 
+              liftIO $ putStrLn "Currently no game, type :begin game to start a game"
+        InGame side -> liftIO $ putStrLn $ "In game, now " ++ show side ++ " moves"
+        GameFinished side -> liftIO $ putStrLn $ "Game finished, " ++ show side ++ " won"

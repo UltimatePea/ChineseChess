@@ -22,6 +22,7 @@ entry =
 mainApp :: Application
 mainApp = do 
     putInitialGameBoard
+    liftIO clearScreen
     controlMainLoop
 
 
@@ -33,7 +34,7 @@ controlMainLoop = do
 
     -- 1. Print Current Board
     -- clear board first
-    liftIO clearScreen
+    -- liftIO clearScreen
     -- hide cursor so users don't see flashes
     liftIO hideCursor
 
@@ -41,7 +42,8 @@ controlMainLoop = do
     liftIO $ setCursorPosition 0 0
     -- then print the board
     colorPrintBoard 
-    -- then print other info
+    -- then print other info after clearing info
+    liftIO $ clearFromCursorToScreenEnd
     printPositionInfo
     printAppState
 

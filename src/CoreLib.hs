@@ -16,7 +16,9 @@ setN :: Int -> a -> [a] -> [a]
 setN n x xs = take n xs ++ [x] ++ drop (n+1) xs
 
 setN2 :: Int -> Int -> a -> [[a]] -> [[a]]
-setN2 y x t xss = setN y (setN x t (xss !! y)) xss
+setN2 y x t xss = if y > 9 && x > 8 
+                then error $ "r = " ++ show y ++ " c = " ++ show x
+                else setN y (setN x t (xss !! y)) xss
 
 class Monad m => MonadBoard m where
     getBoard :: m Board
@@ -36,7 +38,9 @@ putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece None Empty
 getPiece :: MonadBoard m => Int -> Int -> m Piece
 getPiece r c = do
     (RawBoard xss) <- getBoard
-    return $ (xss !! r) !! c
+    if r > 9 && c > 8 
+    then error $ "r = " ++ show r ++ " c = " ++ show c
+    else return $ (xss !! r) !! c
 
 updatePiece :: MonadBoard m => Int -> Int -> Piece -> m ()
 updatePiece y x p =  do

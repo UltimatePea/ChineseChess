@@ -7,6 +7,7 @@ import Control.Monad.Trans.Either
 import ApplicationDeclaration
 import Printing
 import GameLogic
+import ApplicationMonads
 import CursorInputControl
 import System.Console.ANSI
 import System.IO
@@ -87,11 +88,15 @@ handle 'm' = do
     case state of
         _ -> do
             (r,c) <- getPosition
-            putAppState (PieceSelected (r,c))
+            availablePos <- getAvailablePositions
+            -- only select if the piece is movable
+            if availablePos /= []
+            then putAppState (PieceSelected (r,c) availablePos)
+            else putAppState (AppError "You cannot move this piece")
 handle 'y' = do
     state <- getAppState
     case state of 
-        PieceSelected (r,c) -> do
+        PieceSelected (r,c) _ -> do
             (r2, c2) <- getPosition
             putMoveAction (r,c) (r2,c2)
             moveres <- runEitherT  movePiece 
@@ -100,13 +105,30 @@ handle 'y' = do
                 Left reason -> putAppState (AppError reason)
         _ -> putAppState (AppError "y not available, use m to select a piece first")
 
+handle '\ESC' = putAppState Normal
 handle 'n' = do
     state <- getAppState
     case state of 
-        PieceSelected _ -> do
+        PieceSelected _ _ -> do
                 putAppState (OperationSuccessful "Move Cancelled")
         _ -> putAppState (AppError "n not available, use m to select a piece first")
 handle x = putAppState (AppError $ "Unrecognized operation " ++ show x)
+
+-- This method must be called upon the initiation of a piece selected, the movable piece must be the piece that's under the cursor
+getAvailablePositions :: (MonadBoard m, MonadMovePieceAction m, MonadAppState m, MonadPosition m) => m [(Int, Int)]
+getAvailablePositions = do
+    (r,c) <- getPosition 
+    res <- flip filterM allBoardPositions $ \(r2, c2) -> do
+        putMoveAction (r,c) (r2,c2)
+        res <- runEitherT checkMoveViability
+        case res of
+            Left _ -> return False
+            Right _ -> return True
+    return res
+
+    
+        
+
 
 postMoveStateChange :: (MonadAppState m) => m ()
 postMoveStateChange = do
@@ -121,7 +143,7 @@ printAppState = do
     state <- getAppState
     case state of
         Normal -> liftIO $ putStrLn "Press hjkl to move cursor, m to move a piece"
-        PieceSelected _ -> liftIO $ putStrLn "Press hjkl to move cursor, y to confirm, n to cancel"
+        PieceSelected _ _ -> liftIO $ putStrLn "Press hjkl to move cursor, y to confirm, n to cancel"
         AppError reason -> liftIO $ putStrLn $ "Error: " ++ reason
         OperationSuccessful status -> liftIO $ putStrLn $ "OK: " ++ status
         -- End not happending here

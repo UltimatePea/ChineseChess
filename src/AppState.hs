@@ -13,7 +13,10 @@ data Piece = Piece PieceSide PieceType
 data RawBoard a = RawBoard [[a]]
 type Board = RawBoard Piece
 
-data AppState = Normal | PieceSelected (Int, Int) | End | AppError String | OperationSuccessful String
+data AppState = Normal | PieceSelected {
+    selectedPosition :: (Int, Int),
+    reachablePositions :: [(Int, Int)]
+    } | End | AppError String | OperationSuccessful String
 
 data RootStore = RootStore
     {

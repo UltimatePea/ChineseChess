@@ -64,7 +64,7 @@ colorPrintStrLn xs = do
     putStrLn ""
 
     -- assumes non empty board, assume one division at y = 5
-colorPrintBoard :: (MonadBoard m, MonadIO m, MonadPosition m) => m ()
+colorPrintBoard :: (MonadBoard m, MonadIO m, MonadPosition m, MonadAppState m, MonadBoard m) => m ()
 colorPrintBoard  = getBoard >>= \(RawBoard xxs) -> 
     let width = length xxs
         height = length (head xxs) 
@@ -81,11 +81,26 @@ printDivider width = colorPrintStrLn (intersperse Space (replicate (width-1) Ver
 printMiddleDivider :: Int -> IO ()
 printMiddleDivider width = colorPrintStrLn ( 
         [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
-printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition m) => Int ->  [a] -> m ()
+printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition m, MonadAppState m, MonadBoard m) => Int ->  [a] -> m ()
 printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [0..] row) )
                                         >> (liftIO $ putStrLn "")
-printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition m) => Int -> Int ->  a -> m ()
+printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition m, MonadAppState m, MonadBoard m) => Int -> Int ->  a -> m ()
 printCell rowNum colNum c = do
+    -- color piece selected with cyan bg, available positions with green, available attacking position with red
+    getAppState >>= \state ->
+        case state of
+            PieceSelected p@(i,j) reachable -> 
+                                   if rowNum == i && colNum == j
+                                   then liftIO $ C.setSGR [C.SetColor C.Background C.Vivid C.Cyan]
+                                   else if (rowNum,colNum) `elem` reachable 
+                                        then checkEmpty rowNum colNum >>=  \b -> if b
+                                             then liftIO $ C.setSGR [C.SetColor C.Background C.Dull C.Green]
+                                             else liftIO $ C.setSGR [C.SetColor C.Background C.Vivid C.Green]
+                                        else return ()
+
+            _ -> return ()
+
+    -- color cursor bg
     (i,j) <- getPosition
     if rowNum == i && colNum == j
         then liftIO $ C.setSGR [C.SetColor C.Background C.Vivid C.Black]

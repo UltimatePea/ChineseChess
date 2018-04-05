@@ -32,6 +32,18 @@ instance (Monad m, MonadRootStore m) => MonadBoard m where
         store <- getRootStore
         putRootStore (store { board = b})
 
+allBoardPositions :: [(Int, Int)]
+allBoardPositions = concat $ flip map [0..9] $ \r2 ->
+                            flip map [0..8] $ \c2 ->
+                                (r2, c2)
+checkEmpty :: MonadBoard m => Int -> Int -> m Bool
+checkEmpty r c = do
+        (Piece _ t) <- getPiece r c
+        return (t == Empty)
+
+checkEmpty' :: (MonadTrans t, MonadBoard m) => Int -> Int -> t m Bool
+checkEmpty' r c = lift $ checkEmpty r c
+
 putEmptyBoard :: (MonadBoard m) => m ()
 putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece None Empty)))
 

@@ -1,30 +1,12 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+
 module GameLogic where
 
 import AppState
 import CoreLib
+import ApplicationMonads
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Class
 
-class Monad m => MonadMovePieceAction m where
-    getMoveFrom :: m (Int, Int)
-    getMoveTo :: m (Int, Int)
-    putMoveAction :: (Int, Int) -> (Int, Int) -> m ()
-
- -- WARNING: ARCHITECTURAL WARNING: move action should only be set when the user is moving, therefore should not appear in root store
-instance (Monad m, MonadRootStore m) => MonadMovePieceAction m where
-    getMoveFrom = do
-        store <- getRootStore
-        let (from , _) = movementAction store
-        return from
-    getMoveTo = do
-        store <- getRootStore
-        let (_ , to) = movementAction store
-        return to
-    putMoveAction from to = do
-        store <- getRootStore
-        putRootStore (store {movementAction = (from, to)})
 
 -- asserts a boolean value, if false, invalidate either T monad
 assertThat :: (Monad m) => Bool -> String -> EitherT String m ()
@@ -83,13 +65,7 @@ unit :: Int -> Int
 unit x  | x > 0 = 1
         | x < 0 = -1
 
-checkEmpty :: MonadBoard m => Int -> Int -> m Bool
-checkEmpty r c = do
-        (Piece _ t) <- getPiece r c
-        return (t == Empty)
 
-checkEmpty' :: (MonadTrans t, MonadBoard m) => Int -> Int -> t m Bool
-checkEmpty' r c = lift $ checkEmpty r c
 
 instance PieceSpecificCheck Piece where
     -- checkPieceSpecificMove :: MonadBoard m => Piece ->  (Int, Int) -> (Int, Int) -> EitherT String m ()

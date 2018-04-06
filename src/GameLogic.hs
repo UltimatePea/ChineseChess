@@ -31,21 +31,26 @@ getAvailablePositions = do
             Right _ -> return True
     return res
 
-executeMove :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m, MonadAppState' m) => ((Int, Int), (Int, Int)) -> m ()
-executeMove ((r,c),(r2,c2)) = do
+executeMove :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m, MonadAppState' m, MonadHistoryStack' m) => Bool  -- whether we should write to history
+                                -> ((Int, Int), (Int, Int)) -> m ()
+executeMove writeHistory ((r,c),(r2,c2)) = do
             putMoveAction (r,c) (r2,c2)
-            moveres <- runEitherT  movePiece 
+            moveres <- runEitherT movePiece 
             case moveres of
-                Right _ -> putAppState (OperationSuccessful "Piece Moved")
+                Right pieceTaken -> do
+                    if writeHistory
+                        then appendHistory (HistoryRecord (r,c) (r2,c2) pieceTaken)
+                        else return () -- do nothing on else
+                    putAppState (OperationSuccessful "Piece Moved")
                 Left reason -> putAppState (AppError reason)
 
 -- failable
-movePiece :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m) =>  EitherT String m ()
+movePiece :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m) =>  EitherT String m Piece -- returns the piece taken
 movePiece = do
     from@(fromRow, fromCol) <- lift getMoveFrom
     to@(toRow, toCol) <- lift getMoveTo
     (Piece fromredblack fromtype) <- lift $ getPiece fromRow fromCol
-    (Piece toredblack totype) <- lift $ getPiece toRow toCol
+    taken@(Piece toredblack totype) <- lift $ getPiece toRow toCol
     -- since we're in the eitherT monad (similar to exceptT), if check fails, the below computation will not execute
     checkMoveViability
     lift $ updatePiece fromRow fromCol (Piece None Empty)
@@ -61,6 +66,8 @@ movePiece = do
             if totype == General 
             then GameFinished x
             else InGame $ if x == Red then Black else Red
+
+    return taken
 
 checkMoveViability :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m ) =>  EitherT String m ()
 checkMoveViability  = do

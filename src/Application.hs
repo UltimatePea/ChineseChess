@@ -20,7 +20,7 @@ import System.IO
 entry :: IO ()
 entry = 
     let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []) 
-            Normal ((0, 0), (0,0)) NotInGame 
+            Normal ((0, 0), (0,0)) NotInGame (HistoryStack [] [])
             )
     in st1
 
@@ -113,7 +113,7 @@ handleDirect 'y' = do
     case state of 
         PieceSelected (r,c) _ -> do
             (r2, c2) <- getPosition
-            executeMove ((r,c),(r2,c2))
+            executeMove True ((r,c),(r2,c2))
         _ -> putAppState (AppError "y not available, use m to select a piece first")
 
 handleDirect '\ESC' = putAppState Normal
@@ -123,7 +123,49 @@ handleDirect 'n' = do
         PieceSelected _ _ -> do
                 putAppState (OperationSuccessful "Move Cancelled")
         _ -> putAppState (AppError "n not available, use m to select a piece first")
+
+-- history
+-- \DC2  is ^R
+handleDirect '\DC2' = redo
+handleDirect 'u' = undo
 handleDirect x = putAppState (AppError $ "Unrecognized operation " ++ show x)
+
+
+undoRecord :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m) =>  HistoryRecord -> m ()
+undoRecord (HistoryRecord from@(fr, fc) to@(tr, tc) originalTo) = do
+                originalFrom <- getPiece tr tc
+                updatePiece fr fc originalFrom
+                updatePiece tr tc originalTo
+
+redoRecord :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m) => HistoryRecord -> m ()
+redoRecord (HistoryRecord from@(fr, fc) to@(tr, tc) _) = do
+                piece <- getPiece fr fc
+                updatePiece tr tc piece
+                updatePiece fr fc (Piece None Empty)
+
+undo :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m)  => m ()
+undo = do
+    getHistoryStack >>= \history ->
+        case undoStack history of
+            [] -> putAppState (AppError "No action to undo")
+            (x:xs) -> do
+                undoRecord x
+                putHistoryStack $ HistoryStack {
+                    undoStack = xs
+                    , redoStack = (x:redoStack history)
+                    }
+
+redo :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m) => m ()
+redo = do
+    getHistoryStack >>= \history ->
+        case redoStack history of
+            [] -> putAppState (AppError "No action to redo")
+            (x:xs) -> do
+                redoRecord x
+                putHistoryStack $ HistoryStack {
+                    undoStack = (x:undoStack history)
+                    , redoStack = xs
+                    }
 
 
     

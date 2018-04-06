@@ -21,6 +21,16 @@ data AppState = Normal | PieceSelected {
 
 data GameState = NotInGame | InGame { currentSide :: PieceSide} | GameFinished {winningSide :: PieceSide}
 
+data HistoryRecord = HistoryRecord {
+    historyFromPos :: (Int, Int)
+    , historyToPos :: (Int, Int)
+    , originalPieceAtToPos :: Piece
+    }
+data HistoryStack = HistoryStack {
+      undoStack :: [HistoryRecord]
+    , redoStack :: [HistoryRecord]
+}
+
 data RootStore = RootStore
     {
           cursorPosition :: (Int, Int)
@@ -28,6 +38,7 @@ data RootStore = RootStore
         , appState :: AppState
         , movementAction :: ((Int, Int), (Int, Int))
         , gameState :: GameState
+        , historyStack :: HistoryStack
     }
 
 class Monad m => MonadRootStore m where
@@ -77,3 +88,28 @@ instance (Monad m, MonadRootStore' m) => MonadBoard m where
     putBoard b = do
         store <- getRootStore
         putRootStore (store { board = b})
+
+
+class Monad m => MonadHistoryStack m where
+    getHistoryStack :: m HistoryStack
+    putHistoryStack :: HistoryStack -> m ()
+
+    -- this method overwrites redo stack
+    appendHistory :: HistoryRecord -> m ()
+    appendHistory record = do
+        stack <- getHistoryStack
+        putHistoryStack $ HistoryStack {
+            undoStack = record : undoStack stack
+          , redoStack = []
+        }
+        
+
+
+type MonadHistoryStack' m = (Monad m, MonadRootStore' m)
+instance (Monad m, MonadRootStore' m) => MonadHistoryStack m where
+    getHistoryStack = do
+        store <- getRootStore
+        return (historyStack store)
+    putHistoryStack h = do
+        store <- getRootStore
+        putRootStore (store { historyStack = h})

@@ -64,8 +64,10 @@ colorPrintStrLn xs = do
     colorPrintStr xs
     putStrLn ""
 
+type PrintMonad m = (MonadBoard' m, MonadIO m, MonadPosition' m, MonadAppState' m, MonadBoard' m, MonadMovePieceAction' m, MonadHistoryStack' m)
+
     -- assumes non empty board, assume one division at y = 5
-colorPrintBoard :: (MonadBoard' m, MonadIO m, MonadPosition' m, MonadAppState' m, MonadBoard' m) => m ()
+colorPrintBoard ::  PrintMonad m => m ()
 colorPrintBoard  = getBoard >>= \(RawBoard xxs) -> 
     let width = length xxs
         height = length (head xxs) 
@@ -82,11 +84,25 @@ printDivider width = colorPrintStrLn (intersperse Space (replicate (width-1) Ver
 printMiddleDivider :: Int -> IO ()
 printMiddleDivider width = colorPrintStrLn ( 
         [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
-printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition' m, MonadAppState' m, MonadBoard' m) => Int ->  [a] -> m ()
+printRow :: (Colorable a, Printable a,  PrintMonad m) => Int ->  [a] -> m ()
 printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [0..] row) )
                                         >> (liftIO $ putStrLn "")
-printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition' m, MonadAppState' m, MonadBoard' m) => Int -> Int ->  a -> m ()
+printCell :: (Colorable a, Printable a, PrintMonad m) => Int -> Int ->  a -> m ()
 printCell rowNum colNum c = do
+
+
+    -- print hints of last move, this should appear on the bottom
+    getHistoryStack >>= \history -> 
+        case undoStack history of 
+            [] -> return () -- no history yet
+            (h:_) -> 
+                let f@(fromR, fromC) =  historyFromPos h
+                    t@(toR, toC) = historyToPos h
+                in if (rowNum, colNum) == f || (rowNum, colNum) == t
+                    then liftIO $ C.setSGR [C.SetColor C.Background C.Dull C.Cyan]
+                    else return ()
+
+
     -- color piece selected with cyan bg, available positions with green, available attacking position with red
     getAppState >>= \state ->
         case state of
@@ -100,6 +116,11 @@ printCell rowNum colNum c = do
                                         else return ()
 
             _ -> return ()
+
+
+            
+
+
 
     -- color cursor bg
     (i,j) <- getPosition

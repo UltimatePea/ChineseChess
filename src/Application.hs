@@ -130,7 +130,7 @@ handleDirect x = putAppState (AppError $ "Unrecognized operation " ++ show x)
         
 
 
-postMoveStateChange :: (MonadAppState m) => m ()
+postMoveStateChange :: (MonadAppState' m) => m ()
 postMoveStateChange = do
     state <- getAppState
     case state of
@@ -138,7 +138,7 @@ postMoveStateChange = do
         AppError _ -> putAppState Normal
         _ -> return ()
 
-printAppState :: (MonadAppState m, MonadIO m) => m ()
+printAppState :: (MonadAppState' m, MonadIO m) => m ()
 printAppState = do
     state <- getAppState
     case state of
@@ -150,7 +150,7 @@ printAppState = do
         -- End not happending here
 
 
-printGameState :: (MonadGameState m, MonadIO m) => m ()
+printGameState :: (MonadGameState' m, MonadIO m) => m ()
 printGameState = do
     state <- getGameState
     case state of

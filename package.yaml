@@ -29,6 +29,9 @@ dependencies:
 
 library:
   source-dirs: src
+  default-extensions:
+  - FlexibleContexts
+  - FlexibleInstances
 
 executables:
   chinesechess-exe:

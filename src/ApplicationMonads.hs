@@ -1,4 +1,6 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 module ApplicationMonads where
 import AppState
@@ -9,7 +11,8 @@ class Monad m => MonadMovePieceAction m where
     putMoveAction :: (Int, Int) -> (Int, Int) -> m ()
 
     -- WARNING: ARCHITECTURAL WARNING: move action should only be set when the user is moving, therefore should not appear in root store
-instance (Monad m, MonadRootStore m) => MonadMovePieceAction m where
+type MonadMovePieceAction' m = (Monad m, MonadRootStore' m)
+instance (Monad m, MonadRootStore' m) => MonadMovePieceAction m where
     getMoveFrom = do
         store <- getRootStore
         let (from , _) = movementAction store
@@ -28,7 +31,8 @@ class Monad m => MonadPosition m where
     getPosition :: m (Int, Int)
     putPosition :: (Int, Int) -> m ()
 
-instance (Monad m, MonadRootStore m) => MonadPosition  m where
+type MonadPosition' m = (Monad m, MonadRootStore' m)
+instance (Monad m, MonadRootStore' m) => MonadPosition  m where
     getPosition = do
         store <- getRootStore
         return (cursorPosition store)

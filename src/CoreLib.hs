@@ -1,6 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 
 module CoreLib  where
@@ -21,47 +22,36 @@ setN2 y x t xss = if y > 9 && x > 8
                 then error $ "r = " ++ show y ++ " c = " ++ show x
                 else setN y (setN x t (xss !! y)) xss
 
-class Monad m => MonadBoard m where
-    getBoard :: m Board
-    putBoard :: Board -> m ()
 
-type MonadBoard' m = (Monad m, MonadRootStore m)
-instance (Monad m, MonadRootStore m) => MonadBoard m where
-    getBoard = do
-        store <- getRootStore
-        return (board store)
-    putBoard b = do
-        store <- getRootStore
-        putRootStore (store { board = b})
 
 allBoardPositions :: [(Int, Int)]
 allBoardPositions = concat $ flip map [0..9] $ \r2 ->
                             flip map [0..8] $ \c2 ->
                                 (r2, c2)
-checkEmpty :: MonadBoard m => Int -> Int -> m Bool
+checkEmpty :: MonadBoard' m => Int -> Int -> m Bool
 checkEmpty r c = do
         (Piece _ t) <- getPiece r c
         return (t == Empty)
 
-checkEmpty' :: (MonadTrans t, MonadBoard m) => Int -> Int -> t m Bool
+checkEmpty' :: (MonadTrans t, MonadBoard' m) => Int -> Int -> t m Bool
 checkEmpty' r c = lift $ checkEmpty r c
 
-putEmptyBoard :: (MonadBoard m) => m ()
+putEmptyBoard :: (MonadBoard' m) => m ()
 putEmptyBoard = putBoard $ RawBoard (replicate 10 (replicate 9 (Piece None Empty)))
 
-getPiece :: MonadBoard m => Int -> Int -> m Piece
+getPiece :: MonadBoard' m => Int -> Int -> m Piece
 getPiece r c = do
     (RawBoard xss) <- getBoard
     if r > 9 && c > 8 
     then error $ "r = " ++ show r ++ " c = " ++ show c
     else return $ (xss !! r) !! c
 
-updatePiece :: MonadBoard m => Int -> Int -> Piece -> m ()
+updatePiece :: MonadBoard' m => Int -> Int -> Piece -> m ()
 updatePiece y x p =  do
     (RawBoard xs) <- getBoard
     putBoard (RawBoard (setN2 y x p xs))
 
-putInitialGameBoard :: MonadBoard m => m ()
+putInitialGameBoard :: MonadBoard' m => m ()
 putInitialGameBoard = do
     putEmptyBoard
     updatePiece 0 0 (Piece Black Chariot)

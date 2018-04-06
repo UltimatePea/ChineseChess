@@ -17,7 +17,7 @@ checkStateAndRunAI ai = do
         _ -> putAppState (AppError "Not in game")
 
 
-handleCommand :: (MonadAppState m, MonadGameState m, MonadBoard' m, MonadIO m) => String -> m ()
+handleCommand :: (MonadAppState' m, MonadGameState' m, MonadBoard' m, MonadIO m) => String -> m ()
 handleCommand "quit" = putAppState End
 handleCommand "ai random" = checkStateAndRunAI RandomDecision 
 handleCommand "reset board" = putInitialGameBoard >> putAppState (OperationSuccessful "Board has been reset")

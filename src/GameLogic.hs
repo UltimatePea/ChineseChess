@@ -20,7 +20,7 @@ assertThat' :: (Monad m) => String -> Bool -> EitherT String m ()
 assertThat' = flip assertThat
 
 -- This method must be called upon the initiation of a piece selected, the movable piece must be the piece that's under the cursor(position in position monad)
-getAvailablePositions :: (MonadBoard m, MonadMovePieceAction m, MonadAppState m, MonadPosition m, MonadGameState m) => m [(Int, Int)]
+getAvailablePositions :: (MonadBoard' m, MonadMovePieceAction' m, MonadAppState' m, MonadPosition' m, MonadGameState' m) => m [(Int, Int)]
 getAvailablePositions = do
     (r,c) <- getPosition 
     res <- flip filterM allBoardPositions $ \(r2, c2) -> do
@@ -31,7 +31,7 @@ getAvailablePositions = do
             Right _ -> return True
     return res
 
-executeMove :: (MonadBoard m, MonadMovePieceAction m, MonadGameState m, MonadAppState m) => ((Int, Int), (Int, Int)) -> m ()
+executeMove :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m, MonadAppState' m) => ((Int, Int), (Int, Int)) -> m ()
 executeMove ((r,c),(r2,c2)) = do
             putMoveAction (r,c) (r2,c2)
             moveres <- runEitherT  movePiece 
@@ -40,7 +40,7 @@ executeMove ((r,c),(r2,c2)) = do
                 Left reason -> putAppState (AppError reason)
 
 -- failable
-movePiece :: (MonadBoard m, MonadMovePieceAction m, MonadGameState m) =>  EitherT String m ()
+movePiece :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m) =>  EitherT String m ()
 movePiece = do
     from@(fromRow, fromCol) <- lift getMoveFrom
     to@(toRow, toCol) <- lift getMoveTo
@@ -62,7 +62,7 @@ movePiece = do
             then GameFinished x
             else InGame $ if x == Red then Black else Red
 
-checkMoveViability :: (MonadBoard m, MonadMovePieceAction m, MonadGameState m ) =>  EitherT String m ()
+checkMoveViability :: (MonadBoard' m, MonadMovePieceAction' m, MonadGameState' m ) =>  EitherT String m ()
 checkMoveViability  = do
     from@(fromRow, fromCol) <- lift getMoveFrom
     to@(toRow, toCol) <- lift getMoveTo
@@ -85,7 +85,7 @@ checkMoveViability  = do
 
 class PieceSpecificCheck p where
     -- this only  checks piece specific moves (precondition : from is not empty, to is reachable)
-    checkPieceSpecificMove :: MonadBoard m => p ->  (Int, Int) -> (Int, Int) -> EitherT String m ()
+    checkPieceSpecificMove :: MonadBoard' m => p ->  (Int, Int) -> (Int, Int) -> EitherT String m ()
 
 -- the distance is h + w, not straight line distance
 -- Move to Right / Bottom : Plus. Move to Left/Top : Minus

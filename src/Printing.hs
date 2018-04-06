@@ -65,7 +65,7 @@ colorPrintStrLn xs = do
     putStrLn ""
 
     -- assumes non empty board, assume one division at y = 5
-colorPrintBoard :: (MonadBoard m, MonadIO m, MonadPosition m, MonadAppState m, MonadBoard m) => m ()
+colorPrintBoard :: (MonadBoard' m, MonadIO m, MonadPosition' m, MonadAppState' m, MonadBoard' m) => m ()
 colorPrintBoard  = getBoard >>= \(RawBoard xxs) -> 
     let width = length xxs
         height = length (head xxs) 
@@ -82,10 +82,10 @@ printDivider width = colorPrintStrLn (intersperse Space (replicate (width-1) Ver
 printMiddleDivider :: Int -> IO ()
 printMiddleDivider width = colorPrintStrLn ( 
         [VerticleBar] ++ (replicate (2 * (width-1) - 3) Space) ++ [VerticleBar])
-printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition m, MonadAppState m, MonadBoard m) => Int ->  [a] -> m ()
+printRow :: (Colorable a, Printable a,  MonadIO m, MonadPosition' m, MonadAppState' m, MonadBoard' m) => Int ->  [a] -> m ()
 printRow rowNum row = sequence_ (intersperse (liftIO $ colorPrint HorizontalBar) (zipWith (printCell rowNum) [0..] row) )
                                         >> (liftIO $ putStrLn "")
-printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition m, MonadAppState m, MonadBoard m) => Int -> Int ->  a -> m ()
+printCell :: (Colorable a, Printable a, MonadIO m, MonadPosition' m, MonadAppState' m, MonadBoard' m) => Int -> Int ->  a -> m ()
 printCell rowNum colNum c = do
     -- color piece selected with cyan bg, available positions with green, available attacking position with red
     getAppState >>= \state ->

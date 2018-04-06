@@ -20,12 +20,12 @@ maxY = 8 -- y is across
 class MoveAction a where
     move :: a -> (Int, Int) -> (Int, Int)
 
-moveCursor :: (MonadPosition m, MoveAction t) => t ->  m ()
+moveCursor :: (MonadPosition' m, MoveAction t) => t ->  m ()
 moveCursor action = do
     (x, y) <- getPosition
     putPosition (move action (x,y))
 
-printPositionInfo :: (MonadIO m, MonadPosition m) => m ()
+printPositionInfo :: (MonadIO m, MonadPosition' m) => m ()
 printPositionInfo = do
     (x, y) <- getPosition
     liftIO $ putStrLn $ "Cursor At: (" ++ show x ++ ", " ++ show y ++ ")"

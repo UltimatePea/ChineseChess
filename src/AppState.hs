@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -33,6 +34,7 @@ class Monad m => MonadRootStore m where
     getRootStore :: m RootStore
     putRootStore :: RootStore -> m ()
 
+type MonadRootStore' m = (Monad m, MonadState RootStore m)
 instance (Monad m, MonadState RootStore m) => MonadRootStore  m where
     getRootStore = get
     putRootStore = put
@@ -41,7 +43,8 @@ class Monad m => MonadAppState m where
     getAppState :: m AppState
     putAppState :: AppState -> m ()
 
-instance (Monad m, MonadRootStore m) => MonadAppState  m where
+type MonadAppState' m = (Monad m, MonadRootStore' m)
+instance (Monad m, MonadRootStore' m) => MonadAppState m where
     getAppState = do
         store <- getRootStore
         return (appState store)
@@ -53,10 +56,24 @@ class Monad m => MonadGameState m where
     getGameState :: m GameState
     putGameState :: GameState -> m ()
 
-instance (Monad m, MonadRootStore m) => MonadGameState  m where
+type MonadGameState' m = (Monad m, MonadRootStore' m)
+instance (Monad m, MonadRootStore' m) => MonadGameState  m where
     getGameState = do
         store <- getRootStore
         return (gameState store)
     putGameState s = do
         store <- getRootStore
         putRootStore (store  { gameState = s }) 
+
+class Monad m => MonadBoard m where
+    getBoard :: m Board
+    putBoard :: Board -> m ()
+
+type MonadBoard' m = (Monad m, MonadRootStore' m)
+instance (Monad m, MonadRootStore' m) => MonadBoard m where
+    getBoard = do
+        store <- getRootStore
+        return (board store)
+    putBoard b = do
+        store <- getRootStore
+        putRootStore (store { board = b})

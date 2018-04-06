@@ -1,6 +1,7 @@
 module Printing where
 import AppState
 import CoreLib
+import ApplicationMonads
 import CursorInputControl
 import Data.List (intersperse)
 import qualified System.Console.ANSI as C

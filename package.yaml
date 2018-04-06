@@ -25,6 +25,7 @@ dependencies:
 - mtl >= 2.2.2 && < 2.3
 - transformers >= 0.5.2.0 && < 0.6
 - transformers-either >= 0.0.2 && < 0.1
+- random >= 1.1 && < 1.2
 
 library:
   source-dirs: src

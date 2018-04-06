@@ -21,3 +21,18 @@ instance (Monad m, MonadRootStore m) => MonadMovePieceAction m where
     putMoveAction from to = do
         store <- getRootStore
         putRootStore (store {movementAction = (from, to)})
+
+
+
+class Monad m => MonadPosition m where
+    getPosition :: m (Int, Int)
+    putPosition :: (Int, Int) -> m ()
+
+instance (Monad m, MonadRootStore m) => MonadPosition  m where
+    getPosition = do
+        store <- getRootStore
+        return (cursorPosition store)
+    putPosition p = do
+        store <- getRootStore
+        putRootStore (store  { cursorPosition = p })
+

@@ -6,6 +6,7 @@ module CursorInputControl where
 import AppState
 import Control.Monad.State.Lazy
 import ApplicationDeclaration
+import ApplicationMonads
 import System.Console.ANSI hiding (cursorPosition)
 
 
@@ -18,20 +19,6 @@ maxY = 8 -- y is across
 
 class MoveAction a where
     move :: a -> (Int, Int) -> (Int, Int)
-
-
-class Monad m => MonadPosition m where
-    getPosition :: m (Int, Int)
-    putPosition :: (Int, Int) -> m ()
-
-instance (Monad m, MonadRootStore m) => MonadPosition  m where
-    getPosition = do
-        store <- getRootStore
-        return (cursorPosition store)
-    putPosition p = do
-        store <- getRootStore
-        putRootStore (store  { cursorPosition = p })
-
 
 moveCursor :: (MonadPosition m, MoveAction t) => t ->  m ()
 moveCursor action = do

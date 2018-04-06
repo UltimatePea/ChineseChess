@@ -7,6 +7,7 @@ import CoreLib
 import ApplicationMonads
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Class
+import Control.Monad
 
 
 -- asserts a boolean value, if false, invalidate either T monad
@@ -18,6 +19,27 @@ assertThat b str
 assertThat' :: (Monad m) => String -> Bool -> EitherT String m ()
 assertThat' = flip assertThat
 
+-- This method must be called upon the initiation of a piece selected, the movable piece must be the piece that's under the cursor(position in position monad)
+getAvailablePositions :: (MonadBoard m, MonadMovePieceAction m, MonadAppState m, MonadPosition m, MonadGameState m) => m [(Int, Int)]
+getAvailablePositions = do
+    (r,c) <- getPosition 
+    res <- flip filterM allBoardPositions $ \(r2, c2) -> do
+        putMoveAction (r,c) (r2,c2)
+        res <- runEitherT checkMoveViability
+        case res of
+            Left _ -> return False
+            Right _ -> return True
+    return res
+
+executeMove :: (MonadBoard m, MonadMovePieceAction m, MonadGameState m, MonadAppState m) => ((Int, Int), (Int, Int)) -> m ()
+executeMove ((r,c),(r2,c2)) = do
+            putMoveAction (r,c) (r2,c2)
+            moveres <- runEitherT  movePiece 
+            case moveres of
+                Right _ -> putAppState (OperationSuccessful "Piece Moved")
+                Left reason -> putAppState (AppError reason)
+
+-- failable
 movePiece :: (MonadBoard m, MonadMovePieceAction m, MonadGameState m) =>  EitherT String m ()
 movePiece = do
     from@(fromRow, fromCol) <- lift getMoveFrom

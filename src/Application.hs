@@ -113,11 +113,7 @@ handleDirect 'y' = do
     case state of 
         PieceSelected (r,c) _ -> do
             (r2, c2) <- getPosition
-            putMoveAction (r,c) (r2,c2)
-            moveres <- runEitherT  movePiece 
-            case moveres of
-                Right _ -> putAppState (OperationSuccessful "Piece Moved")
-                Left reason -> putAppState (AppError reason)
+            executeMove ((r,c),(r2,c2))
         _ -> putAppState (AppError "y not available, use m to select a piece first")
 
 handleDirect '\ESC' = putAppState Normal
@@ -129,17 +125,6 @@ handleDirect 'n' = do
         _ -> putAppState (AppError "n not available, use m to select a piece first")
 handleDirect x = putAppState (AppError $ "Unrecognized operation " ++ show x)
 
--- This method must be called upon the initiation of a piece selected, the movable piece must be the piece that's under the cursor
-getAvailablePositions :: (MonadBoard m, MonadMovePieceAction m, MonadAppState m, MonadPosition m, MonadGameState m) => m [(Int, Int)]
-getAvailablePositions = do
-    (r,c) <- getPosition 
-    res <- flip filterM allBoardPositions $ \(r2, c2) -> do
-        putMoveAction (r,c) (r2,c2)
-        res <- runEitherT checkMoveViability
-        case res of
-            Left _ -> return False
-            Right _ -> return True
-    return res
 
     
         

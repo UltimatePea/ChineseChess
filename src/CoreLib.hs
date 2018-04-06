@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -24,6 +25,7 @@ class Monad m => MonadBoard m where
     getBoard :: m Board
     putBoard :: Board -> m ()
 
+type MonadBoard' m = (Monad m, MonadRootStore m)
 instance (Monad m, MonadRootStore m) => MonadBoard m where
     getBoard = do
         store <- getRootStore

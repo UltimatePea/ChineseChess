@@ -9,6 +9,7 @@ import ApplicationDeclaration
 import Printing
 import GameLogic
 import CommandSystem
+import HistorySystem
 import ApplicationMonads
 import CursorInputControl
 import System.Console.ANSI
@@ -130,42 +131,6 @@ handleDirect '\DC2' = redo
 handleDirect 'u' = undo
 handleDirect x = putAppState (AppError $ "Unrecognized operation " ++ show x)
 
-
-undoRecord :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m) =>  HistoryRecord -> m ()
-undoRecord (HistoryRecord from@(fr, fc) to@(tr, tc) originalTo) = do
-                originalFrom <- getPiece tr tc
-                updatePiece fr fc originalFrom
-                updatePiece tr tc originalTo
-
-redoRecord :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m) => HistoryRecord -> m ()
-redoRecord (HistoryRecord from@(fr, fc) to@(tr, tc) _) = do
-                piece <- getPiece fr fc
-                updatePiece tr tc piece
-                updatePiece fr fc (Piece None Empty)
-
-undo :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m)  => m ()
-undo = do
-    getHistoryStack >>= \history ->
-        case undoStack history of
-            [] -> putAppState (AppError "No action to undo")
-            (x:xs) -> do
-                undoRecord x
-                putHistoryStack $ HistoryStack {
-                    undoStack = xs
-                    , redoStack = (x:redoStack history)
-                    }
-
-redo :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m) => m ()
-redo = do
-    getHistoryStack >>= \history ->
-        case redoStack history of
-            [] -> putAppState (AppError "No action to redo")
-            (x:xs) -> do
-                redoRecord x
-                putHistoryStack $ HistoryStack {
-                    undoStack = (x:undoStack history)
-                    , redoStack = xs
-                    }
 
 
     

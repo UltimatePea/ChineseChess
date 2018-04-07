@@ -7,6 +7,7 @@ import ApplicationMonads
 import Data.List
 import AI.AIInterface
 import AI.RandomDecision
+import AI.MiniMax
 import Control.Monad.IO.Class
 import System.Console.ANSI (clearScreen)
 
@@ -26,6 +27,7 @@ checkStateAndRunAI ai = do
 handleCommand :: (MonadAppState' m, MonadGameState' m, MonadBoard' m, MonadIO m) => String -> m ()
 handleCommand "quit" = putAppState End
 handleCommand "ai random" = checkStateAndRunAI RandomDecision 
+handleCommand "ai minimax" = checkStateAndRunAI MiniMax
 handleCommand "reset board" = putInitialGameBoard >> putAppState (OperationSuccessful "Board has been reset")
 handleCommand "begin game" = putGameState (InGame Red) >> putAppState (OperationSuccessful "Game has begun")
 handleCommand "redraw" = liftIO $ clearScreen

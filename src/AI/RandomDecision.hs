@@ -14,7 +14,7 @@ instance AIDecider RandomDecision where
 
 randomDecision ::  (AIMonad m) => PieceSide ->  m ((Int, Int), (Int, Int))
 randomDecision side = do
-    choices <- allMovablePieces side
+    choices <- allViableMoves side
     idx <- liftIO $ randomRIO (0, length choices - 1)
     return (choices !! idx)
 

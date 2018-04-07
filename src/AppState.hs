@@ -20,6 +20,9 @@ data AppState = Normal | PieceSelected {
     } | End | AppError String | OperationSuccessful String
 
 data GameState = NotInGame | InGame { currentSide :: PieceSide} | GameFinished {winningSide :: PieceSide}
+data AIAlgorithm = RandomDecision | MiniMax
+data Handler = AIHandler AIAlgorithm PieceSide 
+
 
 data HistoryRecord = HistoryRecord {
     historyFromPos :: (Int, Int)
@@ -31,7 +34,7 @@ data HistoryStack = HistoryStack {
     , redoStack :: [HistoryRecord]
 }
 
-data RootStore = RootStore
+data RootStore =  RootStore
     {
           cursorPosition :: (Int, Int)
         , board :: Board
@@ -39,7 +42,10 @@ data RootStore = RootStore
         , movementAction :: ((Int, Int), (Int, Int))
         , gameState :: GameState
         , historyStack :: HistoryStack
+        , customHandlers ::  [Handler]
     }
+
+type ApplicationMonad m = (Monad m, MonadRootStore' m,  MonadAppState' m, MonadGameState' m, MonadHistoryStack' m, MonadCustomHandlers' m)
 
 class Monad m => MonadRootStore m where
     getRootStore :: m RootStore
@@ -90,6 +96,8 @@ instance (Monad m, MonadRootStore' m) => MonadBoard m where
         putRootStore (store { board = b})
 
 
+--- HISTORY STACK
+
 class Monad m => MonadHistoryStack m where
     getHistoryStack :: m HistoryStack
     putHistoryStack :: HistoryStack -> m ()
@@ -103,8 +111,6 @@ class Monad m => MonadHistoryStack m where
           , redoStack = []
         }
         
-
-
 type MonadHistoryStack' m = (Monad m, MonadRootStore' m)
 instance (Monad m, MonadRootStore' m) => MonadHistoryStack m where
     getHistoryStack = do
@@ -113,3 +119,27 @@ instance (Monad m, MonadRootStore' m) => MonadHistoryStack m where
     putHistoryStack h = do
         store <- getRootStore
         putRootStore (store { historyStack = h})
+
+
+
+class Monad m => MonadCustomHandlers m where
+    getCustomHandlers :: m [Handler]
+    putCustomHandlers :: [Handler] -> m ()
+
+    addCustomHandler :: Handler -> m ()
+    addCustomHandler h = do
+        handlers <- getCustomHandlers
+        putCustomHandlers (h:handlers)
+
+    clearCustomHandlers :: m ()
+    clearCustomHandlers = do
+        putCustomHandlers []
+
+type MonadCustomHandlers' m = (Monad m, MonadRootStore' m)
+instance (Monad m, MonadRootStore' m) => MonadCustomHandlers m where
+    getCustomHandlers = do
+        store <- getRootStore
+        return (customHandlers store)
+    putCustomHandlers ch = do
+        store <- getRootStore
+        putRootStore (store { customHandlers = ch})

@@ -33,6 +33,7 @@ library:
   - FlexibleContexts
   - FlexibleInstances
   - ConstraintKinds
+  - LambdaCase
 
 executables:
   chinesechess-exe:

@@ -10,6 +10,7 @@ import Printing
 import GameLogic
 import CommandSystem
 import HistorySystem
+import AIHandlerLogic
 import ApplicationMonads
 import CursorInputControl
 import System.Console.ANSI
@@ -21,7 +22,8 @@ import System.IO
 entry :: IO ()
 entry = 
     let st1 = evalStateT mainApp (RootStore (0, 0) (RawBoard []) 
-            Normal ((0, 0), (0,0)) NotInGame (HistoryStack [] [])
+            Normal ((0, 0), (0,0)) NotInGame (HistoryStack [] []) 
+            []
             )
     in st1
 
@@ -76,6 +78,7 @@ controlMainLoop = do
     else do
         c <- liftIO $ hGetChar stdin
         handleDirect c
+        runCustomHandler
 
         -- do app state check here
         state <- getAppState
@@ -130,6 +133,8 @@ handleDirect 'n' = do
 handleDirect '\DC2' = redo
 handleDirect 'u' = undo
 handleDirect x = putAppState (AppError $ "Unrecognized operation " ++ show x)
+
+
 
 
 

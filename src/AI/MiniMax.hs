@@ -7,12 +7,10 @@ import CoreLib
 import Data.List
 import Control.Monad.IO.Class
 
-data MiniMax = MiniMax
 
+minimaxDefaultDepth :: Int
 minimaxDefaultDepth = 2
 
-instance AIDecider MiniMax where
-    runAI MiniMax side = runMiniMax minimaxDefaultDepth side >>= (\(_, m) -> return m)
 
 runMiniMax :: (AIMonad m) => Int -> PieceSide -> m (Int, Move)
 runMiniMax depth side = do

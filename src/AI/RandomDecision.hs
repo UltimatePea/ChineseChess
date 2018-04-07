@@ -6,11 +6,8 @@ import AI.Decisions
 import AI.AIInterface
 import Control.Monad.IO.Class
 
-data RandomDecision = RandomDecision
 
 
-instance AIDecider RandomDecision where
-    runAI RandomDecision = randomDecision 
 
 randomDecision ::  (AIMonad m) => PieceSide ->  m ((Int, Int), (Int, Int))
 randomDecision side = do

@@ -20,7 +20,7 @@ data AppState = Normal | PieceSelected {
     } | End | AppError String | OperationSuccessful String
 
 data GameState = NotInGame | InGame { currentSide :: PieceSide} | GameFinished {winningSide :: PieceSide}
-data AIAlgorithm = RandomDecision | MiniMax
+data AIAlgorithm = RandomDecision | MiniMax | MiniMaxWithAlphaBeta
 data Handler = AIHandler AIAlgorithm PieceSide 
 
 

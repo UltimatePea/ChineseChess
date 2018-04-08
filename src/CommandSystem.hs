@@ -21,6 +21,7 @@ handleCommand :: (MonadAppState' m, MonadGameState' m, MonadBoard' m, MonadIO m,
 handleCommand "quit" = putAppState End
 handleCommand "ai random" = checkStateAndRunAI RandomDecision 
 handleCommand "ai minimax" = checkStateAndRunAI MiniMax
+handleCommand "ai minimaxab" = checkStateAndRunAI MiniMaxWithAlphaBeta
 
 handleCommand "installai" = installAI
 handleCommand "clearai" = clearCustomHandlers  >> (putAppState (OperationSuccessful "AI disabled"))
@@ -47,6 +48,7 @@ installAI = do
         liftIO $ putStrLn "Which AI [minimax/random]? "
         algorithm <- liftIO getLine >>= \case
                         "minimax" -> return MiniMax
+                        "minimaxab" -> return MiniMaxWithAlphaBeta
                         "random" -> return RandomDecision
         liftIO $ putStrLn "Which side [red/black]? "
         side <- liftIO getLine >>= \case

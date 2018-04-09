@@ -115,6 +115,22 @@ unit x  | x > 0 = 1
         | x < 0 = -1
 
 
+checkNonBlocking :: (MonadBoard' m) => (Int, Int) -> (Int, Int) -> EitherT String m ()
+checkNonBlocking from@(fromRow, fromCol) to@(toRow, toCol) = do
+                
+                let movetype = getMoveType from to 
+                let coordinates = case direction movetype of 
+                     Horizontal -> flip map (tail $ init [fromCol, fromCol+(unit (hUnits movetype)) .. toCol])
+                        $ \x -> (fromRow, x)
+                     Vertical -> flip map (tail $ init [fromRow, fromRow+(unit (vUnits movetype)) .. toRow])
+                        $ \x -> (x, fromCol)
+                -- get intermediate coordinates
+                empties <- sequence $ (flip map  coordinates
+                    $ \(r,c) -> (lift $ checkEmpty r c ))
+
+                -- assert that all intermediates should be true
+                assertThat' "There should be no pieces in between" (and empties ) 
+
 
 instance PieceSpecificCheck Piece where
     -- checkPieceSpecificMove :: MonadBoard m => Piece ->  (Int, Int) -> (Int, Int) -> EitherT String m ()
@@ -122,13 +138,22 @@ instance PieceSpecificCheck Piece where
 
         | fromtype == General   -- for general check to whether to position is inside the 3x3 square
             = do
-                assertThat ((fromredblack == Red && toRow >= 7 && toRow <= 9 && toCol >= 3 && toCol <= 5)
-                    || (fromredblack == Black && toRow >= 0 && toRow <= 2 && toCol >= 3 && toCol <= 5))
-                       $  "The general must reside in 3x3 square"
-                let movetype = (getMoveType from to )
-                assertThat (distance movetype == 1 && 
-                    (direction movetype == Horizontal || direction movetype == Vertical))
-                        $ "The general must move only one unit horizontally or vertically"
+                (Piece toredblack totype) <- lift $ getPiece toRow toCol
+                if toredblack /= fromredblack && totype == General
+                    then do
+                        let movetype = getMoveType from to 
+                        assertThat (direction movetype == Vertical)
+                                $ "The general vs general must move vertically"
+                        -- check that nothing is blocking in the way
+                        checkNonBlocking from to
+                else do
+                    assertThat ((fromredblack == Red && toRow >= 7 && toRow <= 9 && toCol >= 3 && toCol <= 5)
+                        || (fromredblack == Black && toRow >= 0 && toRow <= 2 && toCol >= 3 && toCol <= 5))
+                        $  "The general must reside in 3x3 square"
+                    let movetype = (getMoveType from to )
+                    assertThat (distance movetype == 1 && 
+                        (direction movetype == Horizontal || direction movetype == Vertical))
+                            $ "The general must move only one unit horizontally or vertically"
 
         | fromtype == Advisor   -- for general check to whether to position is inside the 3x3 square
             = do
@@ -166,18 +191,7 @@ instance PieceSpecificCheck Piece where
                 assertThat (direction movetype == Vertical || direction movetype == Horizontal)
                         $ "The chariot must move horizontally or verticaly"
                 -- check that nothing is blocking in the way
-                
-                let coordinates = if direction movetype == Horizontal
-                    then flip map (tail $ init [fromCol, fromCol+(unit (hUnits movetype)) .. toCol])
-                        $ \x -> (fromRow, x)
-                    else flip map (tail $ init [fromRow, fromRow+(unit (vUnits movetype)) .. toRow])
-                        $ \x -> (x, fromCol)
-                -- get intermediate coordinates
-                empties <- sequence $ (flip map  coordinates
-                    $ \(r,c) -> (lift $ checkEmpty r c ))
-
-                -- assert that all intermediates should be true
-                assertThat' "There should be no pieces in between" (and empties ) 
+                checkNonBlocking from to
 
         -- WARNING: copying from above
         | fromtype == Cannon

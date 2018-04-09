@@ -1,6 +1,26 @@
 # chinesechess
 
-This program hasn't finished its development. It's not alpha version yet.
+This program implements game Xiangqi, with minimax algorithms. 
+Good for use with 2 players, 1 player and 1 AI, or two AIs.
+
+The game uses familiar VI key bindings.
+`hjkl` to move left, down, up right.
+`u` and `ctrl-R` to undo and redo.
+`m` to move, `y` to confirm and `n` to cancel.
+
+Instructions are given in the game.
+
+The game has a command system to enable/disable AI and controll the game play.
+Type `:help` to show list of commands.
+
+
+Note that the game hides the terminal cursor. Please use `ctrl-D` or `:quit`
+to quit the game instead of `ctrl-C`.
+
+
+## Demo
+
+![demo][.README/demo.gif]
 
 ## Install
 

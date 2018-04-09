@@ -34,10 +34,14 @@ checkStateAndRunAI ai = do
         putPosition cursor
 
 runCustomHandler :: (MonadCustomHandlers' m, AIMonad m) => m ()
-runCustomHandler = do
+runCustomHandler = runCustomHandlerNTimes 200
+
+runCustomHandlerNTimes :: (MonadCustomHandlers' m, AIMonad m) => Int -> m ()
+runCustomHandlerNTimes 0 = return ()
+runCustomHandlerNTimes n = do
     handlers <- getCustomHandlers
     runnables <- filterM isRunnable handlers
     mapM_ runHandler runnables
     if null runnables  -- check no eligible runnables left, if so return, else recurse (usually no runnables if game is finished)
         then return ()
-        else runCustomHandler 
+        else runCustomHandlerNTimes (n-1)

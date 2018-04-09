@@ -20,7 +20,7 @@ to quit the game instead of `ctrl-C`.
 
 ## Demo
 
-![demo][.README/demo.gif]
+![demo](.README/demo.gif)
 
 ## Install
 

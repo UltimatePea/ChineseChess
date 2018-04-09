@@ -31,21 +31,22 @@ handleCommand "begin game" = putGameState (InGame Red) >> putAppState (Operation
 handleCommand "redraw" = liftIO $ clearScreen
 handleCommand "help" = putAppState (OperationSuccessful $ concat $ intersperse "\n"
         ["Available Command: "
-        ,"begin game"
-        ,"reset board"
-        , "ai random"
-        , "ai minimax"
-        , "clearai"
-        , "installai"
-        , "redraw"
-        , "quit"
+        ,"begin game -- Start a game from current board state"
+        ,"reset board -- Reset the board to initial state"
+        , "ai random -- Make one move for current side with random algorithm"
+        , "ai minimax -- Make one move for current side with Minimax algorithm"
+        , "ai minimaxab -- Make one move for current side with Minimax algorithm with alpha beta pruning"
+        , "clearai -- remove all installed ai"
+        , "installai -- add an automatic ai for a side, similar effect of calling ai xxxx for that side"
+        , "redraw -- repaints the screen, in case graphics go wrong"
+        , "quit -- quit the program"
         ])
 handleCommand cmd = putAppState (AppError $ "Unrecognized Command: " ++ cmd ++ "; type help to show commands")
 
 installAI :: (MonadAppState' m, MonadIO m, MonadCustomHandlers' m) => m ()
 installAI = do
         
-        liftIO $ putStrLn "Which AI [minimax/random]? "
+        liftIO $ putStrLn "Which AI [minimax/minimaxab/random]? "
         algorithm <- liftIO getLine >>= \case
                         "minimax" -> return MiniMax
                         "minimaxab" -> return MiniMaxWithAlphaBeta

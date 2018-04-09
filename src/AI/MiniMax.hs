@@ -97,8 +97,8 @@ valueOfPieceAt (r,c) = do
         (Piece Black Elephant ) -> -20
         (Piece Red Horse) -> 40
         (Piece Black Horse ) -> -40
-        (Piece Red Cannon) -> 40
-        (Piece Black Cannon ) -> -40
+        (Piece Red Cannon) -> 45
+        (Piece Black Cannon ) -> -45
         (Piece Red Chariot) -> 90
         (Piece Black Chariot ) -> -90 
     

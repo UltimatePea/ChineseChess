@@ -4,3 +4,6 @@ t:
 p:
 	stack build --profile
 	stack exec -- chinesechess-exe +RTS -p
+
+liquid:
+	bash verifyliquid.sh

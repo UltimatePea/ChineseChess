@@ -1,6 +1,6 @@
-module Printing where
+module ChineseChess.Printing where
 import AppState
-import CoreLib
+import ChineseChess.CoreLib
 import ApplicationMonads
 import CursorInputControl
 import Data.List (intersperse)

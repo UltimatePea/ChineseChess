@@ -1,9 +1,9 @@
 {-# LANGUAGE LambdaCase #-}
 
-module GameLogic where
+module ChineseChess.GameLogic where
 
 import AppState
-import CoreLib
+import ChineseChess.CoreLib
 import ApplicationMonads
 import Control.Monad.Trans.Either
 import Control.Monad.Trans.Class

@@ -5,7 +5,7 @@ import AI.RandomDecision
 import AI.MiniMax
 import AI.AIAlgorithm
 import AppState
-import GameLogic
+import ChineseChess.GameLogic
 import ApplicationMonads
 import Control.Monad
 

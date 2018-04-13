@@ -1,9 +1,9 @@
 {-# LANGUAGE ConstraintKinds #-}
 module AI.AIInterface where
 
-import CoreLib
+import ChineseChess.CoreLib
 import AppState
-import GameLogic
+import ChineseChess.GameLogic
 import ApplicationMonads
 import Control.Monad.IO.Class
 

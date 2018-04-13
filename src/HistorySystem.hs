@@ -1,7 +1,7 @@
 module HistorySystem where
 
 import AppState
-import CoreLib
+import ChineseChess.CoreLib
 
 
 undoRecord :: (MonadAppState' m, MonadHistoryStack' m, MonadBoard' m) =>  HistoryRecord -> m ()

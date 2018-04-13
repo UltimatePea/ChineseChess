@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 
-module CoreLib  where
+module ChineseChess.CoreLib  where
 
 import Control.Monad.State.Lazy
 import Control.Monad.Trans.Class

@@ -1,8 +1,8 @@
 module CommandSystem where
     
 import AppState
-import CoreLib
-import GameLogic
+import ChineseChess.CoreLib
+import ChineseChess.GameLogic
 import ApplicationMonads
 import Data.List
 import AI.AIInterface

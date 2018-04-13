@@ -3,7 +3,7 @@ module AI.MiniMax where
 import AI.AIInterface
 import AI.Decisions
 import AppState
-import CoreLib
+import ChineseChess.CoreLib
 import Data.List
 import Data.Foldable
 import Control.Monad.IO.Class

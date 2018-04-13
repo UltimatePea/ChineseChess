@@ -1,13 +1,13 @@
 {-# LANGUAGE LambdaCase #-}
 module Application where
 
-import CoreLib
+import ChineseChess.CoreLib
 import AppState
 import Control.Monad.State.Lazy
 import Control.Monad.Trans.Either
 import ApplicationDeclaration
-import Printing
-import GameLogic
+import ChineseChess.Printing
+import ChineseChess.GameLogic
 import CommandSystem
 import HistorySystem
 import AIHandlerLogic

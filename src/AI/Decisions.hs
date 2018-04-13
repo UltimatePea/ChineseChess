@@ -1,9 +1,9 @@
 module AI.Decisions where
 
-import CoreLib
+import ChineseChess.CoreLib
 import ApplicationMonads
 import AppState
-import GameLogic
+import ChineseChess.GameLogic
 import AI.AIInterface
 
 type Move = ((Int, Int), (Int, Int))
